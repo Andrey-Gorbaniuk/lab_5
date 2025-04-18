@@ -5,7 +5,6 @@ from src.main import app
 
 client = TestClient(app)
 
-# Существующие пользователи (изначально в «базе»)
 users = [
     {
         'id': 1,
@@ -37,17 +36,14 @@ def test_create_user_with_valid_email():
     response = client.post("/api/v1/user", json=new_user)
     assert response.status_code == 201
     new_id = response.json()
-    # При успешном создании возвращается целый ID
     assert isinstance(new_id, int) and new_id > 0
 
-    # А новый пользователь реально появился в GET
     resp2 = client.get("/api/v1/user", params={'email': new_user['email']})
     assert resp2.status_code == 200
     assert resp2.json() == {'id': new_id, **new_user}
 
 def test_create_user_with_invalid_email():
     """Создание пользователя с почтой, которую уже используют"""
-    # Попытаемся создать «клона» первого пользователя
     dup = {'name': 'Duplicate', 'email': users[0]['email']}
     response = client.post("/api/v1/user", json=dup)
     assert response.status_code == 409
@@ -55,12 +51,10 @@ def test_create_user_with_invalid_email():
 
 def test_delete_user():
     """Удаление пользователя"""
-    # Удаляем второго пользователя
     email = users[1]['email']
     del_resp = client.delete("/api/v1/user", params={'email': email})
     assert del_resp.status_code == 204
 
-    # После удаления при GET вернётся 404
     resp = client.get("/api/v1/user", params={'email': email})
     assert resp.status_code == 404
     assert resp.json() == {'detail': 'User not found'}
